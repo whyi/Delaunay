@@ -196,11 +196,6 @@ void initTriangles()
   nc = 6;
 
   buildOTable();
-  
-  int howmany = random(50,250);
-  
-  for( int i = 0; i < howmany; ++i )
-    addPts(1, random(30, screenSize-30), random(30, screenSize-30));
 }
 
 void mouseClicked()
