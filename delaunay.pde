@@ -207,8 +207,11 @@ void mouseClicked()
     return;
   }
 
-  if( mouseButton == RIGHT )  
+  if( mouseButton == RIGHT )
+  {
+    if( !bRenderCC ) computeCC();
     bRenderCC = !bRenderCC;
+  }
 }
 
 
