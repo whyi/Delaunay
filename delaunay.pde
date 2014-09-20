@@ -127,14 +127,6 @@ boolean isLeftTurn (final Point2D A, final Point2D B, final Point2D C) {
   return false;
 }
 
-boolean isInTriangle (final Point2D A, final Point2D B, final Point2D C, final Point2D P) {
-  if (isLeftTurn(A,B,P) == isLeftTurn(B,C,P) && isLeftTurn(A,B,P) == isLeftTurn(C,A,P)) {
-    return true;
-  }
-
-  return false;
-}
-
 boolean isInTriangle (final int triangleIndex, final Point2D P) {
   final int c = triangleIndex*3;
 
@@ -142,7 +134,11 @@ boolean isInTriangle (final int triangleIndex, final Point2D P) {
   Point2D B = G[v(n(c))];
   Point2D C = G[v(p(c))];
 
-  return isInTriangle(A,B,C,P);
+  if (isLeftTurn(A,B,P) == isLeftTurn(B,C,P) && isLeftTurn(A,B,P) == isLeftTurn(C,A,P)) {
+    return true;
+  }
+
+  return false;
 }
 
 void initTriangles() {
