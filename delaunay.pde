@@ -11,43 +11,37 @@ class Point2D {
   }
 }
 
-class Vector2D
-{
+class Vector2D {
   PVector v;
-  Vector2D( Point2D A, Point2D B )
-  {
+
+  Vector2D(final Point2D A, final Point2D B) {
     v = new PVector(B.x-A.x, B.y-A.y);
   }
   
-  Vector2D( float xx, float yy, float zz )
-  {
-    v = new PVector(xx,yy,zz);
+  Vector2D(final float x, final float y, final float z) {
+    v = new PVector(x,y,z);
   }
   
-  float dot(Vector2D theOther)
-  {
-    return v.x*theOther.v.x + v.y*theOther.v.y;
+  float dot(final Vector2D point) {
+    return v.x*point.v.x + v.y*point.v.y;
   }
   
-  void normalize()
-  {
-    float factor = sqrt(v.x*v.x+v.y*v.y+v.z*v.z);
+  void normalize() {
+    final float factor = sqrt(v.x*v.x+v.y*v.y+v.z*v.z);
     v.x /= factor;
     v.y /= factor;
     v.z /= factor;    
   }
   
-  void left()
-  {
+  void left() {
     float tmp = v.x;
     v.x = -v.y;
     v.y = tmp;
   }
   
-  void scaleBy(float val)
-  {
-    v.x*=val;
-    v.y*=val;
+  void scaleBy(final float factor) {
+    v.x*=factor;
+    v.y*=factor;
   }
 }
 
