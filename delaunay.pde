@@ -1,13 +1,13 @@
-class pt
+class Point2D
 {
   float x, y;
-  pt( float xx, float yy )
+  Point2D( float xx, float yy )
   {
     x = xx;
     y = yy;
   }
 
-  float disTo( pt rhs )
+  float disTo( Point2D rhs )
   {
     return (float)sqrt((rhs.x-x)*(rhs.x-x)+(rhs.y-y)*(rhs.y-y));
   }
@@ -21,7 +21,7 @@ class pt
 class vec
 {
   PVector v;
-  vec( pt A, pt B )
+  vec( Point2D A, Point2D B )
   {
     v = new PVector(B.x-A.x, B.y-A.y);
   }
@@ -77,7 +77,7 @@ float cross2D(vec U, vec V)
   return U.v.x*V.v.y - U.v.y*V.v.x;
 }
 
-boolean isLeftTurn(pt A, pt B, pt C)
+boolean isLeftTurn(Point2D A, Point2D B, Point2D C)
 {
   if( cross2D(new vec(A, B), new vec(B, C) ) > 0 )
     return true;
@@ -85,7 +85,7 @@ boolean isLeftTurn(pt A, pt B, pt C)
   return false;
 }
 
-boolean isIntri_internal(pt A, pt B, pt C, pt P)
+boolean isIntri_internal(Point2D A, Point2D B, Point2D C, Point2D P)
 {
   if( isLeftTurn(A,B,P) == isLeftTurn(B,C,P) &&
       isLeftTurn(A,B,P) == isLeftTurn(C,A,P) )
@@ -103,7 +103,7 @@ int nv = 0;
 int nc = 0;
 
 // circumcenters;
-pt[] cc = new pt[MAX_STUFF];
+Point2D[] cc = new Point2D[MAX_STUFF];
 boolean hasCC = false;
 boolean bRenderCC = true;
 float[] cr = new float[MAX_STUFF];
@@ -114,7 +114,7 @@ int[] C = new int[MAX_STUFF*3];
 boolean[] visited = new boolean[MAX_STUFF*3];
 
 // G Table
-pt[] G = new pt[MAX_STUFF];
+Point2D[] G = new Point2D[MAX_STUFF];
 
 // O-Table
 int[] O = new int[MAX_STUFF];
@@ -166,22 +166,22 @@ int gp(int triIdx)
   return V[p(triIdx)];
 }
 
-boolean isIntri(int triIdx, pt P)
+boolean isIntri(int triIdx, Point2D P)
 {
   int c = triIdx*3;
 
-  pt A = G[v(c)];
-  pt B = G[v(n(c))];
-  pt C = G[v(p(c))];
+  Point2D A = G[v(c)];
+  Point2D B = G[v(n(c))];
+  Point2D C = G[v(p(c))];
   return isIntri_internal(A,B,C,P);
 }
 
 void initTriangles()
 {
-  G[0] = new pt(0,0);
-  G[1] = new pt(0,screenSize);
-  G[2] = new pt(screenSize, screenSize);
-  G[3] = new pt(screenSize, 0);
+  G[0] = new Point2D(0,0);
+  G[1] = new Point2D(0,screenSize);
+  G[2] = new Point2D(screenSize, screenSize);
+  G[3] = new Point2D(screenSize, 0);
 
   nv = 4;
 
@@ -202,7 +202,7 @@ void mouseClicked()
 {
   if( mouseButton == LEFT )
   {
-    addPts(1, mouseX, mouseY);
+    addPoint2Ds(1, mouseX, mouseY);
     if( bRenderCC) computeCC();    
     return;
   }
@@ -373,7 +373,7 @@ void buildOTable()
 }
 
 
-pt intersection(pt S, pt SE, pt Q, pt QE)
+Point2D intersection(Point2D S, Point2D SE, Point2D Q, Point2D QE)
 {
   vec T = new vec(S, SE);
   vec N = new vec(Q, QE);
@@ -385,7 +385,7 @@ pt intersection(pt S, pt SE, pt Q, pt QE)
   float T_dot_N = dot(T,N);
   float t = -QS_dot_N/T_dot_N;
   T.scaleBy(t);
-  return new pt(S.x+T.v.x,S.y+T.v.y);
+  return new Point2D(S.x+T.v.x,S.y+T.v.y);
 }
 
 
@@ -422,20 +422,20 @@ void renderCC()
   noFill();
 }
 
-pt midpt( pt A, pt B )
+Point2D midPoint2D( Point2D A, Point2D B )
 {
-  return new pt( (A.x + B.x)/2, (A.y + B.y)/2 );
+  return new Point2D( (A.x + B.x)/2, (A.y + B.y)/2 );
 }
 
-pt circumCenter(pt A, pt B, pt C)
+Point2D circumCenter(Point2D A, Point2D B, Point2D C)
 {
-  pt midAB = midpt(A,B);
+  Point2D midAB = midPoint2D(A,B);
   vec AB = new vec(A,B);
   AB.left();
   AB.normalize();
   AB.scaleBy(-1);
 
-  pt midBC = midpt(B,C);
+  Point2D midBC = midPoint2D(B,C);
   vec BC = new vec(B,C);
   BC.left();
   BC.normalize();
@@ -443,14 +443,14 @@ pt circumCenter(pt A, pt B, pt C)
 
   float fact = 100;
 
-  pt AA = new pt( midAB.x+AB.v.x*fact, midAB.y+AB.v.y*fact);
-  pt BB = new pt( midAB.x-AB.v.x*fact, midAB.y-AB.v.y*fact);
-  pt CC = new pt( midBC.x+BC.v.x*fact, midBC.y+BC.v.y*fact);
-  pt DD = new pt( midBC.x-BC.v.x*fact, midBC.y-BC.v.y*fact);
+  Point2D AA = new Point2D( midAB.x+AB.v.x*fact, midAB.y+AB.v.y*fact);
+  Point2D BB = new Point2D( midAB.x-AB.v.x*fact, midAB.y-AB.v.y*fact);
+  Point2D CC = new Point2D( midBC.x+BC.v.x*fact, midBC.y+BC.v.y*fact);
+  Point2D DD = new Point2D( midBC.x-BC.v.x*fact, midBC.y-BC.v.y*fact);
   return intersection(AA, BB, CC, DD);  
 }
 
-boolean naiveCheck( float radius, pt cc, int c )
+boolean naiveCheck( float radius, Point2D cc, int c )
 {
   int A = v(c);
 
@@ -463,7 +463,7 @@ boolean naiveCheck( float radius, pt cc, int c )
 boolean isDelaunay(int c)
 {
  // $$$FIXME : reuse precomputed cc and cr
-  pt center = circumCenter(G[v(c)], G[v(n(c))], G[v(p(c))]);
+  Point2D center = circumCenter(G[v(c)], G[v(n(c))], G[v(p(c))]);
   float radius = (float)G[v(c)].disTo(center);
   return( naiveCheck(radius, center, o(c)) );
 }
@@ -505,9 +505,9 @@ void FixMesh(ArrayList l)
   }
 }
 
-void addPts(int param, float xxx, float yyy)
+void addPoint2Ds(int param, float xxx, float yyy)
 {
-  G[nv] = new pt(xxx, yyy);
+  G[nv] = new Point2D(xxx, yyy);
   ++nv;
 
   int ntHere = nt;
@@ -554,9 +554,9 @@ void drawTriangles()
   for( int i = 0; i < nt; ++i )
   {
     int c = i*3;
-    pt A = G[v(c)];
-    pt B = G[v(n(c))];
-    pt C = G[v(p(c))];
+    Point2D A = G[v(c)];
+    Point2D B = G[v(n(c))];
+    Point2D C = G[v(p(c))];
     triangle(A.x, A.y, B.x, B.y, C.x, C.y);
   }
 
