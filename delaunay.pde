@@ -414,7 +414,7 @@ void flipCorner (int c) {
 void fixMesh(ArrayList l) {
   buildOTable();
 
-  while(!l.isEmpty()) {
+  while (!l.isEmpty()) {
     final int c = (Integer)l.get(0);
     flipCorner(c);
     l.remove(0);
@@ -428,7 +428,7 @@ void addPoint(final float x, final float y) {
 
   final int currentNumberOfTriangles = nt;
   for (int triangleIndex = 0; triangleIndex < currentNumberOfTriangles; ++triangleIndex) {
-    if( isInTriangle(triangleIndex, G[nv-1]) ) {
+    if (isInTriangle(triangleIndex, G[nv-1])) {
       final int A = triangleIndex*3;
       final int B = A+1;
       final int C = A+2;
@@ -473,7 +473,7 @@ void drawTriangles() {
   }
 
   strokeWeight(5.0);
-  for(int i = 0; i < nv; ++i) {
+  for (int i = 0; i < nv; ++i) {
     point(G[i].x, G[i].y);
   }
 }
