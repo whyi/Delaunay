@@ -18,20 +18,20 @@ class Point2D
   }
 };
 
-class vec
+class Vector2D
 {
   PVector v;
-  vec( Point2D A, Point2D B )
+  Vector2D( Point2D A, Point2D B )
   {
     v = new PVector(B.x-A.x, B.y-A.y);
   }
   
-  vec( float xx, float yy, float zz )
+  Vector2D( float xx, float yy, float zz )
   {
     v = new PVector(xx,yy,zz);
   }
   
-  float dot(vec theOther)
+  float dot(Vector2D theOther)
   {
     return v.x*theOther.v.x + v.y*theOther.v.y;
   }
@@ -58,28 +58,28 @@ class vec
   }
 }
 
-float dot(vec v1, vec v2)
+float dot(Vector2D v1, Vector2D v2)
 {
   return v1.dot(v2);
 }
 
 
-vec cross(vec U, vec V)
+Vector2D cross(Vector2D U, Vector2D V)
 {
-  return(new vec( U.v.y*V.v.z-U.v.z*V.v.y,
+  return(new Vector2D( U.v.y*V.v.z-U.v.z*V.v.y,
                   U.v.z*V.v.x-U.v.x*V.v.z,
                   U.v.x*V.v.y-U.v.y*V.v.x ));
 }
 
 // result is the Z component of 3D cross
-float cross2D(vec U, vec V)
+float cross2D(Vector2D U, Vector2D V)
 {
   return U.v.x*V.v.y - U.v.y*V.v.x;
 }
 
 boolean isLeftTurn(Point2D A, Point2D B, Point2D C)
 {
-  if( cross2D(new vec(A, B), new vec(B, C) ) > 0 )
+  if( cross2D(new Vector2D(A, B), new Vector2D(B, C) ) > 0 )
     return true;
     
   return false;
@@ -375,11 +375,11 @@ void buildOTable()
 
 Point2D intersection(Point2D S, Point2D SE, Point2D Q, Point2D QE)
 {
-  vec T = new vec(S, SE);
-  vec N = new vec(Q, QE);
+  Vector2D T = new Vector2D(S, SE);
+  Vector2D N = new Vector2D(Q, QE);
   N.normalize();
   N.left();
-  vec QS = new vec(Q, S);
+  Vector2D QS = new Vector2D(Q, S);
   
   float QS_dot_N = dot(QS,N);
   float T_dot_N = dot(T,N);
@@ -430,13 +430,13 @@ Point2D midPoint2D( Point2D A, Point2D B )
 Point2D circumCenter(Point2D A, Point2D B, Point2D C)
 {
   Point2D midAB = midPoint2D(A,B);
-  vec AB = new vec(A,B);
+  Vector2D AB = new Vector2D(A,B);
   AB.left();
   AB.normalize();
   AB.scaleBy(-1);
 
   Point2D midBC = midPoint2D(B,C);
-  vec BC = new vec(B,C);
+  Vector2D BC = new Vector2D(B,C);
   BC.left();
   BC.normalize();
   BC.scaleBy(-1);  
@@ -450,7 +450,7 @@ Point2D circumCenter(Point2D A, Point2D B, Point2D C)
   return intersection(AA, BB, CC, DD);  
 }
 
-boolean naiveCheck( float radius, Point2D cc, int c )
+boolean naiVector2Dheck( float radius, Point2D cc, int c )
 {
   int A = v(c);
 
@@ -465,7 +465,7 @@ boolean isDelaunay(int c)
  // $$$FIXME : reuse precomputed cc and cr
   Point2D center = circumCenter(G[v(c)], G[v(n(c))], G[v(p(c))]);
   float radius = (float)G[v(c)].disTo(center);
-  return( naiveCheck(radius, center, o(c)) );
+  return( naiVector2Dheck(radius, center, o(c)) );
 }
 
 void FlipCorner(int c)
