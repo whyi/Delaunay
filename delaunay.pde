@@ -1,22 +1,15 @@
-class Point2D
-{
+class Point2D {
   float x, y;
-  Point2D( float xx, float yy )
-  {
-    x = xx;
-    y = yy;
+
+  Point2D(final float x, final float y) {
+    this.x = x;
+    this.y = y;
   }
 
-  float disTo( Point2D rhs )
-  {
-    return (float)sqrt((rhs.x-x)*(rhs.x-x)+(rhs.y-y)*(rhs.y-y));
+  float disTo(final Point2D point) {
+    return (float)sqrt((point.x-x)*(point.x-x)+(point.y-y)*(point.y-y));
   }
-  
-  void write()
-  {
-    print( "(" + x + "," + y + ")" );
-  }
-};
+}
 
 class Vector2D
 {
