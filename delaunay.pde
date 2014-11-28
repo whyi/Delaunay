@@ -3,47 +3,45 @@ public class DelaunayTriangulation {
 
   // corner table again!!
   public static final int MAX_STUFF = 6000;
-  int numberOfTriangles = 0;
-  int numberOfVertices = 0;
-  int numberOfCorners = 0;
+  private int numberOfTriangles = 0;
+  private int numberOfVertices = 0;
+  private int numberOfCorners = 0;
   
   // circumcircles
   PVector[] circumcenters = new PVector[MAX_STUFF];
   float[] circumcircleRadius = new float[MAX_STUFF];
   boolean hasCircumcircles = false;
-  
+
   // V Table
-  int[] V = new int[MAX_STUFF];
-  int[] C = new int[MAX_STUFF*3];
-  
+  private int[] V = new int[MAX_STUFF];
+  private int[] C = new int[MAX_STUFF*3];
   
   // G Table
-  PVector[] G = new PVector[MAX_STUFF];
-  
+  private PVector[] G = new PVector[MAX_STUFF];
   
   // O-Table
-  int[] O = new int[MAX_STUFF];
-  OTableHelper myOTableHelper = new OTableHelper();
-  GeometricOperations geometricOperations = new GeometricOperations();
+  private int[] O = new int[MAX_STUFF];
+  private OTableHelper myOTableHelper = new OTableHelper();
+  private GeometricOperations geometricOperations = new GeometricOperations();
 
   public DelaunayTriangulation(int screenSize) {
     mesh = new Mesh2D();
     initTriangles(screenSize);
   }
   
-  int t(int idx) {
+  private int t(int idx) {
     return floor(idx/3);
   }
   
-  int v(int idx) {
+  private int v(int idx) {
     return V[idx];
   }
   
-  int o(int idx) {
+  private int o(int idx) {
     return O[idx];
   }
   
-  int n(int c) {
+  private int n(int c) {
     if (c%3 == 2) {
       return c-2;
     }
@@ -51,7 +49,7 @@ public class DelaunayTriangulation {
     return c+1;
   }
   
-  int p(int c) {
+  private int p(int c) {
     if (c%3 == 0) {
       return c+2;
     }
@@ -59,20 +57,19 @@ public class DelaunayTriangulation {
     return c-1;
   }
   
-  int g(final int triangleIndex) {
+  private int g(final int triangleIndex) {
     return V[triangleIndex*3];
   }
   
-  int gn(final int triangleIndex) {
+  private int gn(final int triangleIndex) {
     return V[n(triangleIndex)];
   }
   
-  int gp(final int triangleIndex) {
+  private int gp(final int triangleIndex) {
     return V[p(triangleIndex)];
   }
   
-  
-  void initTriangles(int screenSize) {
+  private void initTriangles(int screenSize) {
     G[0] = new PVector(0,0);
     G[1] = new PVector(0,screenSize);
     G[2] = new PVector(screenSize, screenSize);
@@ -92,8 +89,8 @@ public class DelaunayTriangulation {
   
     buildOTable();
   }
-  
-  void buildOTable() {
+
+  private void buildOTable() {
     for (int i = 0; i < numberOfCorners; ++i) {
       O[i] = -1;
     }
@@ -119,9 +116,8 @@ public class DelaunayTriangulation {
       }
     }
   }
-  
-  
-  void computeCircumcenters() {
+
+  private void computeCircumcenters() {
     hasCircumcircles = false;
     
     for (int i = 0; i < numberOfTriangles; ++i) {
@@ -131,14 +127,13 @@ public class DelaunayTriangulation {
     }
     hasCircumcircles = true;
   }
-  
-  
-  boolean naiveCheck(float radius, PVector circumcenter, int c) {
+
+  private boolean naiveCheck(float radius, PVector circumcenter, int c) {
     return (PVector.dist(G[v(c)], circumcenter) > radius);
   }
   
   
-  boolean isDelaunay(int c) {
+  private boolean isDelaunay(int c) {
     // $$$FIXME : reuse precomputed cc and cr
     PVector center = geometricOperations.circumCenter(G[v(c)], G[v(n(c))], G[v(p(c))]);
     float radius = PVector.dist(G[v(c)], center);
@@ -146,7 +141,7 @@ public class DelaunayTriangulation {
   }
   
   
-  void flipCorner(int c) {
+  private void flipCorner(int c) {
     if (c == -1) {
       return;
     }
@@ -172,7 +167,7 @@ public class DelaunayTriangulation {
   }
   
   
-  void fixMesh(ArrayList l) {
+  private void fixMesh(ArrayList l) {
     buildOTable();
   
     while (!l.isEmpty()) {
@@ -183,7 +178,7 @@ public class DelaunayTriangulation {
   }
   
   
-  public boolean isInTriangle(int triangleIndex, PVector P) {
+  private public boolean isInTriangle(int triangleIndex, PVector P) {
     final int c = triangleIndex*3;
   
     PVector A = G[v(c)];
@@ -198,8 +193,7 @@ public class DelaunayTriangulation {
     return false;
   }
   
-  
-  void addPoint(final float x, final float y) {
+  public void addPoint(final float x, final float y) {
     G[numberOfVertices] = new PVector(x, y);
     ++numberOfVertices;
   
@@ -237,7 +231,7 @@ public class DelaunayTriangulation {
   }
   
   
-  void drawTriangles() {
+  public void drawTriangles() {
     noFill();
     strokeWeight(1.0);
     stroke(0,255,0);
@@ -257,26 +251,24 @@ public class DelaunayTriangulation {
   }
   
   
-  void drawCircumcircles() {
-    if (!hasCircumcircles) {
-      return;
-    }
-  
-    stroke(255,0,0);
-    noFill();
-    strokeWeight(1.0);
-  
-    for (int i = 3; i < numberOfTriangles; ++i) {
-      stroke(0,0,255);
-      fill(0,0,255);
-      ellipse(circumcenters[i].x, circumcenters[i].y, 5,5);
+  public void drawCircumcircles() {
+    if (hasCircumcircles) {
       stroke(255,0,0);
-      noFill();  
-      ellipse(circumcenters[i].x, circumcenters[i].y, circumcircleRadius[i]*2, circumcircleRadius[i]*2);
+      noFill();
+      strokeWeight(1.0);
+    
+      for (int i = 3; i < numberOfTriangles; ++i) {
+        stroke(0,0,255);
+        fill(0,0,255);
+        ellipse(circumcenters[i].x, circumcenters[i].y, 5,5);
+        stroke(255,0,0);
+        noFill();  
+        ellipse(circumcenters[i].x, circumcenters[i].y, circumcircleRadius[i]*2, circumcircleRadius[i]*2);
+      }
+        
+      stroke(0,0,0);
+      noFill();
     }
-      
-    stroke(0,0,0);
-    noFill();
   }
 }
 
