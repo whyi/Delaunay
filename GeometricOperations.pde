@@ -30,18 +30,18 @@ public class GeometricOperations {
     return new PVector(S.x+tangent.v.x,S.y+tangent.v.y);
   }
   
-  private PVector midPVector(PVector A, PVector B) {
+  private PVector midVector(PVector A, PVector B) {
     return new PVector( (A.x + B.x)/2, (A.y + B.y)/2 );
   }
 
-  public PVector circumCenter(PVector A, PVector B, PVector C) {
-    PVector midAB = midPVector(A,B);
+  public PVector circumcenter(PVector A, PVector B, PVector C) {
+    PVector midAB = midVector(A,B);
     Vector2D AB = new Vector2D(A,B);
     AB.left();
     AB.normalize();
     AB.scaleBy(-1);
   
-    PVector midBC = midPVector(B,C);
+    PVector midBC = midVector(B,C);
     Vector2D BC = new Vector2D(B,C);
     BC.left();
     BC.normalize();

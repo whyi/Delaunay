@@ -8,16 +8,14 @@ public class DelaunayTriangulation {
   private int numberOfCorners = 0;
   
   // circumcircles
-  PVector[] circumcenters = new PVector[MAX_STUFF];
-  float[] circumcircleRadius = new float[MAX_STUFF];
-  boolean hasCircumcircles = false;
+  private ArrayList circumcenters = new ArrayList();
+  private ArrayList circumcircleRadius = new ArrayList();
+  private boolean hasCircumcircles = false;
 
   // V Table
   private int[] V = new int[MAX_STUFF];
-  private int[] C = new int[MAX_STUFF*3];
   
-  // G Table
-  private PVector[] G = new PVector[MAX_STUFF];
+  private ArrayList vertices = new ArrayList();
   
   // O-Table
   private int[] O = new int[MAX_STUFF];
@@ -27,6 +25,10 @@ public class DelaunayTriangulation {
   public DelaunayTriangulation(int screenSize) {
     mesh = new Mesh2D();
     initTriangles(screenSize);
+  }
+
+  private PVector g(int cornerIndex) {
+    return (PVector) vertices.get(v(cornerIndex));
   }
   
   private int v(int idx) {
@@ -54,12 +56,12 @@ public class DelaunayTriangulation {
   }
   
   private void initTriangles(int screenSize) {
-    G[0] = new PVector(0,0);
-    G[1] = new PVector(0,screenSize);
-    G[2] = new PVector(screenSize, screenSize);
-    G[3] = new PVector(screenSize, 0);
+    vertices.add(new PVector(0,0));
+    vertices.add(new PVector(0,screenSize));
+    vertices.add(new PVector(screenSize, screenSize));
+    vertices.add(new PVector(screenSize, 0));
   
-    numberOfVertices = 4;
+    numberOfVertices = vertices.size();
   
     V[0] = 0;
     V[1] = 1;
@@ -103,24 +105,28 @@ public class DelaunayTriangulation {
 
   private void computeCircumcenters() {
     hasCircumcircles = false;
-    
+
+    circumcenters = new ArrayList();
+    circumcircleRadius = new ArrayList();
     for (int i = 0; i < numberOfTriangles; ++i) {
       int c = i*3;
-      circumcenters[i] = geometricOperations.circumCenter(G[v(c)],G[v(c+1)],G[v(c+2)]);
-      circumcircleRadius[i] = PVector.dist(G[v(c)], (circumcenters[i]));
+      PVector circumcenter = geometricOperations.circumcenter(g(c),g(p(c)),g(n(c)));
+      circumcenters.add(circumcenter);
+      circumcircleRadius.add(PVector.dist(g(c), circumcenter));
     }
+
     hasCircumcircles = true;
   }
 
   private boolean naiveCheck(float radius, PVector circumcenter, int c) {
-    return (PVector.dist(G[v(c)], circumcenter) > radius);
+    return (PVector.dist(g(c), circumcenter) > radius);
   }
   
   private boolean isDelaunay(int c) {
     // $$$FIXME : reuse precomputed cc and cr
-    PVector center = geometricOperations.circumCenter(G[v(c)], G[v(n(c))], G[v(p(c))]);
-    float radius = PVector.dist(G[v(c)], center);
-    return naiveCheck(radius, center, o(c));
+    PVector circumcenter = geometricOperations.circumcenter(g(c),g(p(c)),g(n(c)));
+    float radius = PVector.dist(g(c), circumcenter);
+    return naiveCheck(radius, circumcenter, o(c));
   }
   
   private void flipCorner(int c) {
@@ -161,9 +167,9 @@ public class DelaunayTriangulation {
   private boolean isInTriangle(int triangleIndex, PVector P) {
     final int c = triangleIndex*3;
   
-    PVector A = G[v(c)];
-    PVector B = G[v(n(c))];
-    PVector C = G[v(p(c))];
+    PVector A = g(c);
+    PVector B = g(n(c));
+    PVector C = g(p(c));
   
     if (geometricOperations.isLeftTurn(A,B,P) == geometricOperations.isLeftTurn(B,C,P) &&
         geometricOperations.isLeftTurn(A,B,P) == geometricOperations.isLeftTurn(C,A,P)) {
@@ -174,12 +180,13 @@ public class DelaunayTriangulation {
   }
   
   public void addPoint(final float x, final float y) {
-    G[numberOfVertices] = new PVector(x, y);
+    PVector newPoint = new PVector(x,y);
+    vertices.add(newPoint);
     ++numberOfVertices;
   
     final int currentNumberOfTriangles = numberOfTriangles;
     for (int triangleIndex = 0; triangleIndex < currentNumberOfTriangles; ++triangleIndex) {
-      if (isInTriangle(triangleIndex, G[numberOfVertices-1])) {
+      if (isInTriangle(triangleIndex, newPoint)) {
         final int A = triangleIndex*3;
         final int B = A+1;
         final int C = A+2;
@@ -217,15 +224,16 @@ public class DelaunayTriangulation {
   
     for (int i = 0; i < numberOfTriangles; ++i) {
       int c = i*3;
-      PVector A = G[v(c)];
-      PVector B = G[v(n(c))];
-      PVector C = G[v(p(c))];
+    PVector A = g(c);
+    PVector B = g(n(c));
+    PVector C = g(p(c));
       triangle(A.x, A.y, B.x, B.y, C.x, C.y);
     }
   
     strokeWeight(5.0);
     for (int i = 0; i < numberOfVertices; ++i) {
-      point(G[i].x, G[i].y);
+      PVector p = (PVector) vertices.get(i);
+      point(p.x, p.y);
     }
   }
   
@@ -238,10 +246,12 @@ public class DelaunayTriangulation {
       for (int i = 3; i < numberOfTriangles; ++i) {
         stroke(0,0,255);
         fill(0,0,255);
-        ellipse(circumcenters[i].x, circumcenters[i].y, 5,5);
+        PVector circumcenter = (PVector) circumcenters.get(i);
+        Float radius = (Float) circumcircleRadius.get(i)*2;
+        ellipse(circumcenter.x, circumcenter.y, 5,5);
         stroke(255,0,0);
         noFill();  
-        ellipse(circumcenters[i].x, circumcenters[i].y, circumcircleRadius[i]*2, circumcircleRadius[i]*2);
+        ellipse(circumcenter.x, circumcenter.y, radius, radius);
       }
         
       stroke(0,0,0);
