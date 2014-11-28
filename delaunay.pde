@@ -1,12 +1,12 @@
 class Point2D {
   float x, y;
 
-  Point2D (final float x, final float y) {
+  Point2D(final float x, final float y) {
     this.x = x;
     this.y = y;
   }
 
-  float disTo (final Point2D point) {
+  float disTo(final Point2D point) {
     return (float)sqrt((point.x-x)*(point.x-x)+(point.y-y)*(point.y-y));
   }
 }
@@ -14,15 +14,15 @@ class Point2D {
 class Vector2D {
   PVector v;
 
-  Vector2D (final Point2D A, final Point2D B) {
+  Vector2D(final Point2D A, final Point2D B) {
     v = new PVector(B.x-A.x, B.y-A.y);
   }
   
-  Vector2D (final float x, final float y, final float z) {
+  Vector2D(final float x, final float y, final float z) {
     v = new PVector(x,y,z);
   }
   
-  float dot (final Vector2D point) {
+  float dot(final Vector2D point) {
     return v.x*point.v.x + v.y*point.v.y;
   }
   
@@ -68,21 +68,21 @@ Point2D[] G = new Point2D[MAX_STUFF];
 
 // O-Table
 int[] O = new int[MAX_STUFF];
+OTableHelper oTableHelper = new OTableHelper();
 
-
-int t (final int idx) {
+int t(int idx) {
   return floor(idx/3);
 }
 
-int v (final int idx) {
+int v(int idx) {
   return V[idx];
 }
 
-int o (final int idx) {
+int o(int idx) {
   return O[idx];
 }
 
-int n (final int c) {
+int n(int c) {
   if (c%3 == 2) {
     return c-2;
   }
@@ -90,7 +90,7 @@ int n (final int c) {
   return c+1;
 }
 
-int p (final int c) {
+int p(int c) {
   if (c%3 == 0) {
     return c+2;
   }
@@ -98,28 +98,28 @@ int p (final int c) {
   return c-1;
 }
 
-int g (final int triangleIndex) {
+int g(final int triangleIndex) {
   return V[triangleIndex*3];
 }
 
-int gn (final int triangleIndex) {
+int gn(final int triangleIndex) {
   return V[n(triangleIndex)];
 }
 
-int gp (final int triangleIndex) {
+int gp(final int triangleIndex) {
   return V[p(triangleIndex)];
 }
 
-float dot (final Vector2D v1, final Vector2D v2) {
+float dot(final Vector2D v1, final Vector2D v2) {
   return v1.dot(v2);
 }
 
 // result is the Z component of 3D cross
-float cross2D (final Vector2D U, final Vector2D V) {
+float cross2D(final Vector2D U, final Vector2D V) {
   return U.v.x*V.v.y - U.v.y*V.v.x;
 }
 
-boolean isLeftTurn (final Point2D A, final Point2D B, final Point2D C) {
+boolean isLeftTurn(final Point2D A, final Point2D B, final Point2D C) {
   if (cross2D(new Vector2D(A, B), new Vector2D(B, C)) > 0) {
     return true;
   }
@@ -127,7 +127,7 @@ boolean isLeftTurn (final Point2D A, final Point2D B, final Point2D C) {
   return false;
 }
 
-boolean isInTriangle (final int triangleIndex, final Point2D P) {
+boolean isInTriangle(final int triangleIndex, final Point2D P) {
   final int c = triangleIndex*3;
 
   Point2D A = G[v(c)];
@@ -181,86 +181,6 @@ void mouseClicked() {
   }
 }
 
-class Triplet {
-  int a, b, c;
-  
-  Triplet (final int a, final int b, final int c) {
-    this.a = a;
-    this.b = b;
-    this.c = c;
-  }
-  
-  Triplet (final Triplet rhs) {
-    this.a = rhs.a;
-    this.b = rhs.b;
-    this.c = rhs.c;
-  }  
-  
-  boolean isLessThan (final Triplet rhs) {
-    if( a < rhs.a ) {
-      return true;
-    }
-    else if( a == rhs.a ) {
-      if( b < rhs.b ) {
-        return true;
-      }
-      else if( b == rhs.b ) {
-        if( c < rhs.c ) {
-          return true;
-        }
-      }
-      else {
-        return false;
-      }
-    }
-    return false;
-  }
-};
-
-
-ArrayList concatenate (ArrayList left, Triplet val, ArrayList right) {
-  ArrayList ret = new ArrayList();
-  for( int i = 0; i < left.size(); ++i )
-    ret.add((Triplet)left.get(i));
-  
-  ret.add(val);
-  
-  for( int i = 0; i < right.size(); ++i )
-    ret.add((Triplet)right.get(i));
-    
-  return ret;
-}
-
-
-ArrayList naiveQSort (ArrayList stuff)
-{
-  if( stuff.size() <= 1 ) {
-    return stuff;
-  }
-  
-  int pivotIdx = round(stuff.size()/2);
-  
-  Triplet pivot = (Triplet)stuff.get(pivotIdx);
-
-  ArrayList left = new ArrayList();
-  ArrayList right = new ArrayList();  
-
-  for (int i = 0; i < stuff.size(); ++i) {
-    if (i == pivotIdx) {
-      continue;
-    }
-    
-    Triplet cur = (Triplet)stuff.get(i);
-    if (cur.isLessThan(pivot)) {
-      left.add(new Triplet(cur));
-    }
-    else {
-      right.add(new Triplet(cur));
-    }      
-  }
-  return concatenate(naiveQSort(left), pivot, naiveQSort(right));
-}
-
 void buildOTable() {
   for (int i = 0; i < nc; ++i) {
     O[i] = -1;
@@ -275,7 +195,7 @@ void buildOTable() {
   }
 
   ArrayList sorted = new ArrayList();
-  sorted = naiveQSort(vtriples);
+  sorted = oTableHelper.naiveSort(vtriples);
 
   // just pair up the stuff
   for (int i = 0; i < nc-1; ++i) {
@@ -290,7 +210,7 @@ void buildOTable() {
 }
 
 
-Point2D intersection (Point2D S, Point2D SE, Point2D Q, Point2D QE) {
+Point2D intersection(Point2D S, Point2D SE, Point2D Q, Point2D QE) {
   Vector2D T = new Vector2D(S, SE);
   Vector2D N = new Vector2D(Q, QE);
   N.normalize();
@@ -485,7 +405,8 @@ void draw() {
 
   pushMatrix();
     drawTriangles();
-    if( bRenderCC )
+    if (bRenderCC) {
       renderCC();
+    }
   popMatrix();
 }
