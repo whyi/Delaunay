@@ -8,7 +8,6 @@ void setup() {
   smooth(); 
 }
 
-
 void draw() {
   background(0);
 
@@ -17,7 +16,6 @@ void draw() {
     delaunayTriangulation.drawCircumcircles();
   }
 }
-
 
 void mouseClicked() {
   if (mouseButton == LEFT) {

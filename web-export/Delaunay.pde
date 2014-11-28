@@ -8,7 +8,6 @@ void setup() {
   smooth(); 
 }
 
-
 void draw() {
   background(0);
 
@@ -17,7 +16,6 @@ void draw() {
     delaunayTriangulation.drawCircumcircles();
   }
 }
-
 
 void mouseClicked() {
   if (mouseButton == LEFT) {
@@ -36,151 +34,80 @@ void mouseClicked() {
   }
 }
 
-public class DelaunayTriangulation {
-  private final Mesh2D mesh;
-
-  // corner table again!!
-  public static final int MAX_STUFF = 6000;
-  private int numberOfTriangles = 0;
-  private int numberOfVertices = 0;
-  private int numberOfCorners = 0;
-  
+public class DelaunayTriangulation extends Mesh2D {
   // circumcircles
-  //PVector[] circumcenters = new PVector[MAX_STUFF];
   private ArrayList circumcenters = new ArrayList();
-  float[] circumcircleRadius = new float[MAX_STUFF];
-  boolean hasCircumcircles = false;
-
-  // V Table
-  private int[] V = new int[MAX_STUFF];
-  
-  private ArrayList vertices = new ArrayList();
-  
-  // O-Table
-  private int[] O = new int[MAX_STUFF];
-  private OTableHelper myOTableHelper = new OTableHelper();
-  private GeometricOperations geometricOperations = new GeometricOperations();
+  private ArrayList circumcircleRadius = new ArrayList();
+  private boolean hasCircumcircles = false;
 
   public DelaunayTriangulation(int screenSize) {
-    mesh = new Mesh2D();
     initTriangles(screenSize);
   }
 
-  private PVector g(int cornerIndex) {
-    return (PVector) vertices.get(v(cornerIndex));
-  }
-  
-  private int v(int idx) {
-    return V[idx];
-  }
-  
-  private int o(int idx) {
-    return O[idx];
-  }
-  
-  private int n(int c) {
-    if (c%3 == 2) {
-      return c-2;
-    }
-  
-    return c+1;
-  }
-  
-  private int p(int c) {
-    if (c%3 == 0) {
-      return c+2;
-    }
-  
-    return c-1;
-  }
-  
   private void initTriangles(int screenSize) {
     vertices.add(new PVector(0,0));
     vertices.add(new PVector(0,screenSize));
     vertices.add(new PVector(screenSize, screenSize));
     vertices.add(new PVector(screenSize, 0));
   
-    numberOfVertices = vertices.size();
+    numberOfVertices = 4;
   
-    V[0] = 0;
-    V[1] = 1;
-    V[2] = 2;
-    V[3] = 2;
-    V[4] = 3;
-    V[5] = 0;  
-  
+    corners.add(0);
+    corners.add(1);
+    corners.add(2);
+    corners.add(2);
+    corners.add(3);
+    corners.add(0);
+
     numberOfTriangles = 2;
     numberOfCorners = 6;
   
     buildOTable();
   }
 
-  private void buildOTable() {
-    for (int i = 0; i < numberOfCorners; ++i) {
-      O[i] = -1;
-    }
-  
-    ArrayList triples = new ArrayList();
-    for (int i=0; i<numberOfCorners; ++i) {
-      int nextCorner = v(n(i));
-      int previousCorner = v(p(i));
-      
-      triples.add(new Triplet(min(nextCorner,previousCorner), max(nextCorner,previousCorner), i));
-    }
-  
-    myOTableHelper.naiveSort(triples);
-  
-    // just pair up the stuff
-    for (int i = 0; i < numberOfCorners-1; ++i) {
-      Triplet t1 = (Triplet)triples.get(i);
-      Triplet t2 = (Triplet)triples.get(i+1);
-      if (t1.a == t2.a && t1.b == t2.b) {
-        O[t1.c] = t2.c;
-        O[t2.c] = t1.c;
-        i+=1;
-      }
-    }
-  }
-
   private void computeCircumcenters() {
     hasCircumcircles = false;
-    
+
+    circumcenters = new ArrayList();
+    circumcircleRadius = new ArrayList();
     for (int i = 0; i < numberOfTriangles; ++i) {
       int c = i*3;
-      circumcenters[i] = geometricOperations.circumCenter(g(c),g(p(c)),g(n(c)));
-      circumcircleRadius[i] = PVector.dist(g(c), (circumcenters[i]));
+      PVector circumcenter = geometricOperations.circumcenter(g(c),g(p(c)),g(n(c)));
+      circumcenters.add(circumcenter);
+      circumcircleRadius.add(PVector.dist(g(c), circumcenter));
     }
+
     hasCircumcircles = true;
   }
 
   private boolean naiveCheck(float radius, PVector circumcenter, int c) {
-    return (PVector.dist(g(c), circumcenter) > radius);
+    return PVector.dist(g(c), circumcenter) > radius;
   }
   
   private boolean isDelaunay(int c) {
     // $$$FIXME : reuse precomputed cc and cr
-    PVector center = geometricOperations.circumCenter(g(c),g(p(c)),g(n(c)));
-    float radius = PVector.dist(g(c), center);
-    return naiveCheck(radius, center, o(c));
+    PVector circumcenter = geometricOperations.circumcenter(g(c),g(p(c)),g(n(c)));
+    float radius = PVector.dist(g(c), circumcenter);
+    return naiveCheck(radius, circumcenter, o(c));
   }
   
   private void flipCorner(int c) {
-    if (c == -1) {
+    if (c == BOUNDARY) {
       return;
     }
   
     buildOTable();    
   
     // boundary, do nothing..
-    if (o(c) == -1) {
+    if (o(c) == BOUNDARY) {
       return;
     }
   
     if (!isDelaunay(c)) {
       int opp = o(c);
       
-      V[n(c)] = V[opp];    
-      V[n(opp)] = V[c];
+      corners.set(n(c), corners.get(opp));
+      corners.set(n(opp), corners.get(c));
   
       buildOTable();
       flipCorner(c);
@@ -226,23 +153,23 @@ public class DelaunayTriangulation {
         final int B = A+1;
         final int C = A+2;
   
-        V[numberOfTriangles*3]   = v(B);
-        V[numberOfTriangles*3+1] = v(C);
-        V[numberOfTriangles*3+2] = numberOfVertices-1;
+        corners.add(corners.get(B));
+        corners.add(corners.get(C));
+        corners.add(numberOfVertices-1);
   
-        V[numberOfTriangles*3+3] = v(C);
-        V[numberOfTriangles*3+4] = v(A);
-        V[numberOfTriangles*3+5] = numberOfVertices-1;
+        corners.add(corners.get(C));
+        corners.add(corners.get(A));
+        corners.add(numberOfVertices-1);
   
-        V[C] = numberOfVertices-1;
+        corners.set(C, numberOfVertices-1);
         
         ArrayList dirtyCorners = new ArrayList();
-        final int d1 = C;
-        final int d2 = numberOfTriangles*3+2;
-        final int d3 = numberOfTriangles*3+5;
-        dirtyCorners.add(d1);
-        dirtyCorners.add(d2);
-        dirtyCorners.add(d3);
+        int dirtyCorner1 = C;
+        int dirtyCorner2 = numberOfTriangles*3+2;
+        int dirtyCorner3 = numberOfTriangles*3+5;
+        dirtyCorners.add(dirtyCorner1);
+        dirtyCorners.add(dirtyCorner2);
+        dirtyCorners.add(dirtyCorner3);
   
         numberOfTriangles += 2;
         numberOfCorners += 6;
@@ -259,9 +186,9 @@ public class DelaunayTriangulation {
   
     for (int i = 0; i < numberOfTriangles; ++i) {
       int c = i*3;
-    PVector A = g(c);
-    PVector B = g(n(c));
-    PVector C = g(p(c));
+      PVector A = g(c);
+      PVector B = g(n(c));
+      PVector C = g(p(c));
       triangle(A.x, A.y, B.x, B.y, C.x, C.y);
     }
   
@@ -281,10 +208,12 @@ public class DelaunayTriangulation {
       for (int i = 3; i < numberOfTriangles; ++i) {
         stroke(0,0,255);
         fill(0,0,255);
-        ellipse(circumcenters[i].x, circumcenters[i].y, 5,5);
+        PVector circumcenter = (PVector) circumcenters.get(i);
+        Float radius = (Float) circumcircleRadius.get(i)*2;
+        ellipse(circumcenter.x, circumcenter.y, 5,5);
         stroke(255,0,0);
         noFill();  
-        ellipse(circumcenters[i].x, circumcenters[i].y, circumcircleRadius[i]*2, circumcircleRadius[i]*2);
+        ellipse(circumcenter.x, circumcenter.y, radius, radius);
       }
         
       stroke(0,0,0);
@@ -297,7 +226,6 @@ public class DelaunayTriangulation {
 // as static final class make more sense here.
 // However Jasmine cannot deal with it, so it's for testibility purpose only.
 public class GeometricOperations {
-
   // result is the Z component of 3D cross
   private float cross2D(final Vector2D U, final Vector2D V) {
     return U.v.x*V.v.y - U.v.y*V.v.x;
@@ -325,18 +253,18 @@ public class GeometricOperations {
     return new PVector(S.x+tangent.v.x,S.y+tangent.v.y);
   }
   
-  private PVector midPVector(PVector A, PVector B) {
+  private PVector midVector(PVector A, PVector B) {
     return new PVector( (A.x + B.x)/2, (A.y + B.y)/2 );
   }
 
-  public PVector circumCenter(PVector A, PVector B, PVector C) {
-    PVector midAB = midPVector(A,B);
+  public PVector circumcenter(PVector A, PVector B, PVector C) {
+    PVector midAB = midVector(A,B);
     Vector2D AB = new Vector2D(A,B);
     AB.left();
     AB.normalize();
     AB.scaleBy(-1);
   
-    PVector midBC = midPVector(B,C);
+    PVector midBC = midVector(B,C);
     Vector2D BC = new Vector2D(B,C);
     BC.left();
     BC.normalize();
@@ -353,7 +281,70 @@ public class GeometricOperations {
 }
 
 public class Mesh2D {
+  protected static final int BOUNDARY = -1;
+  protected int numberOfTriangles = 0;
+  protected int numberOfVertices = 0;
+  protected int numberOfCorners = 0;
+
+  protected ArrayList corners = new ArrayList();
+  protected ArrayList vertices = new ArrayList();
+  protected ArrayList opposites = new ArrayList();
+  protected OTableHelper myOTableHelper = new OTableHelper();
+  protected GeometricOperations geometricOperations = new GeometricOperations();
+
+  protected PVector g(int cornerIndex) {
+    return (PVector) vertices.get(v(cornerIndex));
+  }
   
+  protected int v(int cornerIndex) {
+    return (Integer) corners.get(cornerIndex);
+  }
+  
+  protected int o(int cornerIndex) {
+    return (Integer) opposites.get(cornerIndex);
+  }
+  
+  protected int n(int c) {
+    if (c%3 == 2) {
+      return c-2;
+    }
+    return c+1;
+  }
+  
+  protected int p(int c) {
+    if (c%3 == 0) {
+      return c+2;
+    }
+    return c-1;
+  }
+
+  protected void buildOTable() {
+    opposites = new ArrayList();
+    for (int i = 0; i < numberOfCorners; ++i) {
+      opposites.add(BOUNDARY);
+    }
+  
+    ArrayList triples = new ArrayList();
+    for (int i=0; i<numberOfCorners; ++i) {
+      int nextCorner = v(n(i));
+      int previousCorner = v(p(i));
+      
+      triples.add(new Triplet(min(nextCorner,previousCorner), max(nextCorner,previousCorner), i));
+    }
+  
+    myOTableHelper.naiveSort(triples);
+  
+    // just pair up the stuff
+    for (int i = 0; i < numberOfCorners-1; ++i) {
+      Triplet t1 = (Triplet)triples.get(i);
+      Triplet t2 = (Triplet)triples.get(i+1);
+      if (t1.a == t2.a && t1.b == t2.b) {
+        opposites.set(t1.c, t2.c);
+        opposites.set(t2.c, t1.c);
+        i+=1;
+      }
+    }
+  }
 }
 public class OTableHelper {
   private void swap(ArrayList list, int a, int b) {

@@ -2,7 +2,6 @@
 // as static final class make more sense here.
 // However Jasmine cannot deal with it, so it's for testibility purpose only.
 public class GeometricOperations {
-
   // result is the Z component of 3D cross
   private float cross2D(final Vector2D U, final Vector2D V) {
     return U.v.x*V.v.y - U.v.y*V.v.x;
