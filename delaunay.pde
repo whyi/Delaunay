@@ -1,43 +1,9 @@
-class Vector2D {
-  PVector v;
-
-  Vector2D(final PVector A, final PVector B) {
-    v = new PVector(B.x-A.x, B.y-A.y);
-  }
-  
-  Vector2D(final float x, final float y, final float z) {
-    v = new PVector(x,y,z);
-  }
-  
-  float dot(final Vector2D point) {
-    return v.x*point.v.x + v.y*point.v.y;
-  }
-  
-  void normalize() {
-    final float factor = sqrt(v.x*v.x+v.y*v.y+v.z*v.z);
-    v.x /= factor;
-    v.y /= factor;
-    v.z /= factor;    
-  }
-  
-  void left() {
-    float tmp = v.x;
-    v.x = -v.y;
-    v.y = tmp;
-  }
-  
-  void scaleBy (final float factor) {
-    v.x*=factor;
-    v.y*=factor;
-  }
-}
-
 // corner table again!!
-final int SCREEN_SIZE = 800;
-final int MAX_STUFF = 6000;
-int nt = 0;
-int nv = 0;
-int nc = 0;
+public static final int SCREEN_SIZE = 800;
+public static final int MAX_STUFF = 6000;
+int numberOfTriangles = 0;
+int numberOfVertices = 0;
+int numberOfCorners = 0;
 
 // circumcenters;
 PVector[] cc = new PVector[MAX_STUFF];
@@ -48,14 +14,13 @@ float[] cr = new float[MAX_STUFF];
 // V Table
 int[] V = new int[MAX_STUFF];
 int[] C = new int[MAX_STUFF*3];
-boolean[] visited = new boolean[MAX_STUFF*3];
 
 // G Table
 PVector[] G = new PVector[MAX_STUFF];
 
 // O-Table
 int[] O = new int[MAX_STUFF];
-OTableHelper oTableHelper = new OTableHelper();
+OTableHelper myOTableHelper = new OTableHelper();
 
 int t(int idx) {
   return floor(idx/3);
@@ -97,9 +62,6 @@ int gp(final int triangleIndex) {
   return V[p(triangleIndex)];
 }
 
-float dot(final Vector2D v1, final Vector2D v2) {
-  return v1.dot(v2);
-}
 
 // result is the Z component of 3D cross
 float cross2D(final Vector2D U, final Vector2D V) {
@@ -134,7 +96,7 @@ void initTriangles() {
   G[2] = new PVector(SCREEN_SIZE, SCREEN_SIZE);
   G[3] = new PVector(SCREEN_SIZE, 0);
 
-  nv = 4;
+  numberOfVertices = 4;
 
   V[0] = 0;
   V[1] = 1;
@@ -143,8 +105,8 @@ void initTriangles() {
   V[4] = 3;
   V[5] = 0;  
 
-  nt = 2;
-  nc = 6;
+  numberOfTriangles = 2;
+  numberOfCorners = 6;
 
   buildOTable();
 }
@@ -154,7 +116,7 @@ void mouseClicked() {
     addPoint(mouseX, mouseY);
     
     if(bRenderCC) {
-      computeCC();
+      computeCircumcenters();
     }
     
     return;
@@ -162,32 +124,31 @@ void mouseClicked() {
 
   if (mouseButton == RIGHT) {
     if (!bRenderCC) {
-      computeCC();
+      computeCircumcenters();
     }
     bRenderCC = !bRenderCC;
   }
 }
 
 void buildOTable() {
-  for (int i = 0; i < nc; ++i) {
+  for (int i = 0; i < numberOfCorners; ++i) {
     O[i] = -1;
   }
 
-  ArrayList vtriples = new ArrayList();
-  for(int ii=0; ii<nc; ++ii) {
-    int n1 = v(n(ii));
-    int p1 = v(p(ii));
+  ArrayList triples = new ArrayList();
+  for (int i=0; i<numberOfCorners; ++i) {
+    int nextCorner = v(n(i));
+    int previousCorner = v(p(i));
     
-    vtriples.add(new Triplet(min(n1,p1), max(n1,p1), ii));
+    triples.add(new Triplet(min(nextCorner,previousCorner), max(nextCorner,previousCorner), i));
   }
 
-  ArrayList sorted = new ArrayList();
-  sorted = oTableHelper.naiveSort(vtriples);
+  myOTableHelper.naiveSort(triples);
 
   // just pair up the stuff
-  for (int i = 0; i < nc-1; ++i) {
-    Triplet t1 = (Triplet)sorted.get(i);
-    Triplet t2 = (Triplet)sorted.get(i+1);
+  for (int i = 0; i < numberOfCorners-1; ++i) {
+    Triplet t1 = (Triplet)triples.get(i);
+    Triplet t2 = (Triplet)triples.get(i+1);
     if (t1.a == t2.a && t1.b == t2.b) {
       O[t1.c] = t2.c;
       O[t2.c] = t1.c;
@@ -198,51 +159,29 @@ void buildOTable() {
 
 
 PVector intersection(PVector S, PVector SE, PVector Q, PVector QE) {
-  Vector2D T = new Vector2D(S, SE);
-  Vector2D N = new Vector2D(Q, QE);
-  N.normalize();
-  N.left();
+  Vector2D tangent = new Vector2D(S, SE);
+  Vector2D normal = new Vector2D(Q, QE);
+  normal.normalize();
+  normal.left();
   Vector2D QS = new Vector2D(Q, S);
   
-  float QS_dot_N = dot(QS,N);
-  float T_dot_N = dot(T,N);
-  float t = -QS_dot_N/T_dot_N;
-  T.scaleBy(t);
-  return new PVector(S.x+T.v.x,S.y+T.v.y);
+  float QSDotNormal = QS.dot(normal);
+  float tangentDotNormal = tangent.dot(normal);
+  float t = -QSDotNormal/tangentDotNormal;
+  tangent.scaleBy(t);
+  return new PVector(S.x+tangent.v.x,S.y+tangent.v.y);
 }
 
 
-void computeCC() {
+void computeCircumcenters() {
   hasCC = false;
   
-  for (int i = 0; i < nt; ++i) {
+  for (int i = 0; i < numberOfTriangles; ++i) {
     int c = i*3;
     cc[i] = circumCenter(G[v(c)],G[v(c+1)],G[v(c+2)]);
     cr[i] = PVector.dist(G[v(c)], (cc[i]));
   }
   hasCC = true;
-}
-
-void renderCC() {
-  if (!hasCC) {
-    return;
-  }
-
-  stroke(255,0,0);
-  noFill();
-  strokeWeight(1.0);
-
-  for (int i = 3; i < nt; ++i) {
-    stroke(0,0,255);
-    fill(0,0,255);
-    ellipse(cc[i].x, cc[i].y, 5,5);
-    stroke(255,0,0);
-    noFill();  
-    ellipse(cc[i].x, cc[i].y, cr[i]*2, cr[i]*2);
-  }
-    
-  stroke(0,0,0);
-  noFill();
 }
 
 PVector midPVector (final PVector A, final PVector B) {
@@ -281,15 +220,15 @@ boolean naiveCheck (final float radius, final PVector cc, final int c) {
   return true;
 }
 
-boolean isDelaunay (int c) {
- // $$$FIXME : reuse precomputed cc and cr
+boolean isDelaunay(int c) {
+  // $$$FIXME : reuse precomputed cc and cr
   PVector center = circumCenter(G[v(c)], G[v(n(c))], G[v(p(c))]);
   float radius = PVector.dist(G[v(c)], center);
-  return( naiveCheck(radius, center, o(c)) );
+  return naiveCheck(radius, center, o(c));
 }
 
-void flipCorner (int c) {
-  if( c == -1 ) {
+void flipCorner(int c) {
+  if (c == -1) {
     return;
   }
 
@@ -326,60 +265,85 @@ void fixMesh(ArrayList l) {
 
 
 void addPoint(final float x, final float y) {
-  G[nv] = new PVector(x, y);
-  ++nv;
+  G[numberOfVertices] = new PVector(x, y);
+  ++numberOfVertices;
 
-  final int currentNumberOfTriangles = nt;
+  final int currentNumberOfTriangles = numberOfTriangles;
   for (int triangleIndex = 0; triangleIndex < currentNumberOfTriangles; ++triangleIndex) {
-    if (isInTriangle(triangleIndex, G[nv-1])) {
+    if (isInTriangle(triangleIndex, G[numberOfVertices-1])) {
       final int A = triangleIndex*3;
       final int B = A+1;
       final int C = A+2;
 
-      V[nt*3]   = v(B);
-      V[nt*3+1] = v(C);
-      V[nt*3+2] = nv-1;
+      V[numberOfTriangles*3]   = v(B);
+      V[numberOfTriangles*3+1] = v(C);
+      V[numberOfTriangles*3+2] = numberOfVertices-1;
 
-      V[nt*3+3] = v(C);
-      V[nt*3+4] = v(A);
-      V[nt*3+5] = nv-1;
+      V[numberOfTriangles*3+3] = v(C);
+      V[numberOfTriangles*3+4] = v(A);
+      V[numberOfTriangles*3+5] = numberOfVertices-1;
 
-      V[C] = nv-1;
+      V[C] = numberOfVertices-1;
       
       ArrayList dirtyCorners = new ArrayList();
       final int d1 = C;
-      final int d2 = nt*3+2;
-      final int d3 = nt*3+5;
+      final int d2 = numberOfTriangles*3+2;
+      final int d3 = numberOfTriangles*3+5;
       dirtyCorners.add(d1);
       dirtyCorners.add(d2);
       dirtyCorners.add(d3);
 
-      nt += 2;
-      nc += 6;
+      numberOfTriangles += 2;
+      numberOfCorners += 6;
       fixMesh(dirtyCorners);
       break;
     }
   }
 }
 
+
 void drawTriangles() {
   noFill();
   strokeWeight(1.0);
   stroke(0,255,0);
 
-  for (int i = 0; i < nt; ++i) {
-    final int c = i*3;
-    final PVector A = G[v(c)];
-    final PVector B = G[v(n(c))];
-    final PVector C = G[v(p(c))];
+  for (int i = 0; i < numberOfTriangles; ++i) {
+    int c = i*3;
+    PVector A = G[v(c)];
+    PVector B = G[v(n(c))];
+    PVector C = G[v(p(c))];
     triangle(A.x, A.y, B.x, B.y, C.x, C.y);
   }
 
   strokeWeight(5.0);
-  for (int i = 0; i < nv; ++i) {
+  for (int i = 0; i < numberOfVertices; ++i) {
     point(G[i].x, G[i].y);
   }
 }
+
+
+void drawCircumcenters() {
+  if (!hasCC) {
+    return;
+  }
+
+  stroke(255,0,0);
+  noFill();
+  strokeWeight(1.0);
+
+  for (int i = 3; i < numberOfTriangles; ++i) {
+    stroke(0,0,255);
+    fill(0,0,255);
+    ellipse(cc[i].x, cc[i].y, 5,5);
+    stroke(255,0,0);
+    noFill();  
+    ellipse(cc[i].x, cc[i].y, cr[i]*2, cr[i]*2);
+  }
+    
+  stroke(0,0,0);
+  noFill();
+}
+
 
 void setup() {
   size(SCREEN_SIZE, SCREEN_SIZE);
@@ -387,13 +351,14 @@ void setup() {
   initTriangles();
 }
 
+
 void draw() {
   background(0);
 
   pushMatrix();
     drawTriangles();
     if (bRenderCC) {
-      renderCC();
+      drawCircumcenters();
     }
   popMatrix();
 }
