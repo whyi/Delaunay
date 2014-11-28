@@ -1,20 +1,7 @@
-class Point2D {
-  float x, y;
-
-  Point2D(final float x, final float y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  float disTo(final Point2D point) {
-    return (float)sqrt((point.x-x)*(point.x-x)+(point.y-y)*(point.y-y));
-  }
-}
-
 class Vector2D {
   PVector v;
 
-  Vector2D(final Point2D A, final Point2D B) {
+  Vector2D(final PVector A, final PVector B) {
     v = new PVector(B.x-A.x, B.y-A.y);
   }
   
@@ -53,7 +40,7 @@ int nv = 0;
 int nc = 0;
 
 // circumcenters;
-Point2D[] cc = new Point2D[MAX_STUFF];
+PVector[] cc = new PVector[MAX_STUFF];
 boolean hasCC = false;
 boolean bRenderCC = true;
 float[] cr = new float[MAX_STUFF];
@@ -64,7 +51,7 @@ int[] C = new int[MAX_STUFF*3];
 boolean[] visited = new boolean[MAX_STUFF*3];
 
 // G Table
-Point2D[] G = new Point2D[MAX_STUFF];
+PVector[] G = new PVector[MAX_STUFF];
 
 // O-Table
 int[] O = new int[MAX_STUFF];
@@ -119,7 +106,7 @@ float cross2D(final Vector2D U, final Vector2D V) {
   return U.v.x*V.v.y - U.v.y*V.v.x;
 }
 
-boolean isLeftTurn(final Point2D A, final Point2D B, final Point2D C) {
+boolean isLeftTurn(final PVector A, final PVector B, final PVector C) {
   if (cross2D(new Vector2D(A, B), new Vector2D(B, C)) > 0) {
     return true;
   }
@@ -127,12 +114,12 @@ boolean isLeftTurn(final Point2D A, final Point2D B, final Point2D C) {
   return false;
 }
 
-boolean isInTriangle(final int triangleIndex, final Point2D P) {
+boolean isInTriangle(final int triangleIndex, final PVector P) {
   final int c = triangleIndex*3;
 
-  Point2D A = G[v(c)];
-  Point2D B = G[v(n(c))];
-  Point2D C = G[v(p(c))];
+  PVector A = G[v(c)];
+  PVector B = G[v(n(c))];
+  PVector C = G[v(p(c))];
 
   if (isLeftTurn(A,B,P) == isLeftTurn(B,C,P) && isLeftTurn(A,B,P) == isLeftTurn(C,A,P)) {
     return true;
@@ -142,10 +129,10 @@ boolean isInTriangle(final int triangleIndex, final Point2D P) {
 }
 
 void initTriangles() {
-  G[0] = new Point2D(0,0);
-  G[1] = new Point2D(0,SCREEN_SIZE);
-  G[2] = new Point2D(SCREEN_SIZE, SCREEN_SIZE);
-  G[3] = new Point2D(SCREEN_SIZE, 0);
+  G[0] = new PVector(0,0);
+  G[1] = new PVector(0,SCREEN_SIZE);
+  G[2] = new PVector(SCREEN_SIZE, SCREEN_SIZE);
+  G[3] = new PVector(SCREEN_SIZE, 0);
 
   nv = 4;
 
@@ -210,7 +197,7 @@ void buildOTable() {
 }
 
 
-Point2D intersection(Point2D S, Point2D SE, Point2D Q, Point2D QE) {
+PVector intersection(PVector S, PVector SE, PVector Q, PVector QE) {
   Vector2D T = new Vector2D(S, SE);
   Vector2D N = new Vector2D(Q, QE);
   N.normalize();
@@ -221,7 +208,7 @@ Point2D intersection(Point2D S, Point2D SE, Point2D Q, Point2D QE) {
   float T_dot_N = dot(T,N);
   float t = -QS_dot_N/T_dot_N;
   T.scaleBy(t);
-  return new Point2D(S.x+T.v.x,S.y+T.v.y);
+  return new PVector(S.x+T.v.x,S.y+T.v.y);
 }
 
 
@@ -231,7 +218,7 @@ void computeCC() {
   for (int i = 0; i < nt; ++i) {
     int c = i*3;
     cc[i] = circumCenter(G[v(c)],G[v(c+1)],G[v(c+2)]);
-    cr[i] = (float)G[v(c)].disTo(cc[i]);
+    cr[i] = PVector.dist(G[v(c)], (cc[i]));
   }
   hasCC = true;
 }
@@ -258,18 +245,18 @@ void renderCC() {
   noFill();
 }
 
-Point2D midPoint2D (final Point2D A, final Point2D B) {
-  return new Point2D( (A.x + B.x)/2, (A.y + B.y)/2 );
+PVector midPVector (final PVector A, final PVector B) {
+  return new PVector( (A.x + B.x)/2, (A.y + B.y)/2 );
 }
 
-Point2D circumCenter (final Point2D A, final Point2D B, final Point2D C) {
-  Point2D midAB = midPoint2D(A,B);
+PVector circumCenter (final PVector A, final PVector B, final PVector C) {
+  PVector midAB = midPVector(A,B);
   Vector2D AB = new Vector2D(A,B);
   AB.left();
   AB.normalize();
   AB.scaleBy(-1);
 
-  Point2D midBC = midPoint2D(B,C);
+  PVector midBC = midPVector(B,C);
   Vector2D BC = new Vector2D(B,C);
   BC.left();
   BC.normalize();
@@ -277,17 +264,17 @@ Point2D circumCenter (final Point2D A, final Point2D B, final Point2D C) {
 
   float fact = 100;
 
-  Point2D AA = new Point2D( midAB.x+AB.v.x*fact, midAB.y+AB.v.y*fact);
-  Point2D BB = new Point2D( midAB.x-AB.v.x*fact, midAB.y-AB.v.y*fact);
-  Point2D CC = new Point2D( midBC.x+BC.v.x*fact, midBC.y+BC.v.y*fact);
-  Point2D DD = new Point2D( midBC.x-BC.v.x*fact, midBC.y-BC.v.y*fact);
+  PVector AA = new PVector( midAB.x+AB.v.x*fact, midAB.y+AB.v.y*fact);
+  PVector BB = new PVector( midAB.x-AB.v.x*fact, midAB.y-AB.v.y*fact);
+  PVector CC = new PVector( midBC.x+BC.v.x*fact, midBC.y+BC.v.y*fact);
+  PVector DD = new PVector( midBC.x-BC.v.x*fact, midBC.y-BC.v.y*fact);
   return intersection(AA, BB, CC, DD);  
 }
 
-boolean naiveCheck (final float radius, final Point2D cc, final int c) {
+boolean naiveCheck (final float radius, final PVector cc, final int c) {
   int A = v(c);
 
-  if (G[A].disTo(cc) < radius) {
+  if (PVector.dist(G[A], cc) < radius) {
     return false;
   }
 
@@ -296,8 +283,8 @@ boolean naiveCheck (final float radius, final Point2D cc, final int c) {
 
 boolean isDelaunay (int c) {
  // $$$FIXME : reuse precomputed cc and cr
-  Point2D center = circumCenter(G[v(c)], G[v(n(c))], G[v(p(c))]);
-  float radius = (float)G[v(c)].disTo(center);
+  PVector center = circumCenter(G[v(c)], G[v(n(c))], G[v(p(c))]);
+  float radius = PVector.dist(G[v(c)], center);
   return( naiveCheck(radius, center, o(c)) );
 }
 
@@ -339,7 +326,7 @@ void fixMesh(ArrayList l) {
 
 
 void addPoint(final float x, final float y) {
-  G[nv] = new Point2D(x, y);
+  G[nv] = new PVector(x, y);
   ++nv;
 
   final int currentNumberOfTriangles = nt;
@@ -382,9 +369,9 @@ void drawTriangles() {
 
   for (int i = 0; i < nt; ++i) {
     final int c = i*3;
-    final Point2D A = G[v(c)];
-    final Point2D B = G[v(n(c))];
-    final Point2D C = G[v(p(c))];
+    final PVector A = G[v(c)];
+    final PVector B = G[v(n(c))];
+    final PVector C = G[v(p(c))];
     triangle(A.x, A.y, B.x, B.y, C.x, C.y);
   }
 
