@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Jasmine Spec Runner v2.1.2</title>
+
+  <link rel="shortcut icon" type="image/png" href="lib/jasmine-2.1.2/jasmine_favicon.png">
+  <link rel="stylesheet" href="lib/jasmine-2.1.2/jasmine.css">
+
+  <script src="lib/jasmine-2.1.2/jasmine.js"></script>
+  <script src="lib/jasmine-2.1.2/jasmine-html.js"></script>
+  <script src="lib/jasmine-2.1.2/boot.js"></script>
+
+  <!-- dependencies for SketchFormer -->
+  <script src="processing-1.4.8-light-support.js" type="text/javascript"></script>
+
+  <!-- include spec files here... -->
+  <script src="spec/SketchFormerTests.js"></script>
+
+  <script type="text/javascript">
+  // convenience function to get the id attribute of generated sketch html element
+  function getProcessingSketchId () { return 'SketchFormer'; }
+  </script>
+</head>
+
+<body>
+
+<div style="display:none">
+  <canvas id="SketchFormer" data-processing-sources="SketchFormer.pde" width="1" height="1" style="display:none">
+    <p>Your browser does not support the canvas tag.</p>
+    <!-- Note: you can put any alternative content here. -->
+  </canvas>
+
+  <noscript>
+    <p>JavaScript is required to view the contents of this page.</p>
+  </noscript>
+</div>
+
+</body>
+</html>
