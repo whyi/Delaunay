@@ -5,18 +5,21 @@ int numberOfTriangles = 0;
 int numberOfVertices = 0;
 int numberOfCorners = 0;
 
-// circumcenters;
-PVector[] cc = new PVector[MAX_STUFF];
-boolean hasCC = false;
-boolean bRenderCC = true;
-float[] cr = new float[MAX_STUFF];
+// circumcircles
+PVector[] circumcenters = new PVector[MAX_STUFF];
+float[] circumcircleRadius = new float[MAX_STUFF];
+boolean hasCircumcircles = false;
+boolean shouldDrawCircumcircles = true;
+
 
 // V Table
 int[] V = new int[MAX_STUFF];
 int[] C = new int[MAX_STUFF*3];
 
+
 // G Table
 PVector[] G = new PVector[MAX_STUFF];
+
 
 // O-Table
 int[] O = new int[MAX_STUFF];
@@ -76,7 +79,7 @@ boolean isLeftTurn(final PVector A, final PVector B, final PVector C) {
   return false;
 }
 
-boolean isInTriangle(final int triangleIndex, final PVector P) {
+boolean isInTriangle(int triangleIndex, PVector P) {
   final int c = triangleIndex*3;
 
   PVector A = G[v(c)];
@@ -115,7 +118,7 @@ void mouseClicked() {
   if (mouseButton == LEFT) {
     addPoint(mouseX, mouseY);
     
-    if(bRenderCC) {
+    if(shouldDrawCircumcircles) {
       computeCircumcenters();
     }
     
@@ -123,10 +126,10 @@ void mouseClicked() {
   }
 
   if (mouseButton == RIGHT) {
-    if (!bRenderCC) {
+    if (!shouldDrawCircumcircles) {
       computeCircumcenters();
     }
-    bRenderCC = !bRenderCC;
+    shouldDrawCircumcircles = !shouldDrawCircumcircles;
   }
 }
 
@@ -174,21 +177,23 @@ PVector intersection(PVector S, PVector SE, PVector Q, PVector QE) {
 
 
 void computeCircumcenters() {
-  hasCC = false;
+  hasCircumcircles = false;
   
   for (int i = 0; i < numberOfTriangles; ++i) {
     int c = i*3;
-    cc[i] = circumCenter(G[v(c)],G[v(c+1)],G[v(c+2)]);
-    cr[i] = PVector.dist(G[v(c)], (cc[i]));
+    circumcenters[i] = circumCenter(G[v(c)],G[v(c+1)],G[v(c+2)]);
+    circumcircleRadius[i] = PVector.dist(G[v(c)], (circumcenters[i]));
   }
-  hasCC = true;
+  hasCircumcircles = true;
 }
 
-PVector midPVector (final PVector A, final PVector B) {
+
+PVector midPVector(PVector A, PVector B) {
   return new PVector( (A.x + B.x)/2, (A.y + B.y)/2 );
 }
 
-PVector circumCenter (final PVector A, final PVector B, final PVector C) {
+
+PVector circumCenter(PVector A, PVector B, PVector C) {
   PVector midAB = midPVector(A,B);
   Vector2D AB = new Vector2D(A,B);
   AB.left();
@@ -210,6 +215,7 @@ PVector circumCenter (final PVector A, final PVector B, final PVector C) {
   return intersection(AA, BB, CC, DD);  
 }
 
+
 boolean naiveCheck (final float radius, final PVector cc, final int c) {
   int A = v(c);
 
@@ -220,12 +226,14 @@ boolean naiveCheck (final float radius, final PVector cc, final int c) {
   return true;
 }
 
+
 boolean isDelaunay(int c) {
   // $$$FIXME : reuse precomputed cc and cr
   PVector center = circumCenter(G[v(c)], G[v(n(c))], G[v(p(c))]);
   float radius = PVector.dist(G[v(c)], center);
   return naiveCheck(radius, center, o(c));
 }
+
 
 void flipCorner(int c) {
   if (c == -1) {
@@ -322,8 +330,8 @@ void drawTriangles() {
 }
 
 
-void drawCircumcenters() {
-  if (!hasCC) {
+void drawCircumcircles() {
+  if (!hasCircumcircles) {
     return;
   }
 
@@ -334,10 +342,10 @@ void drawCircumcenters() {
   for (int i = 3; i < numberOfTriangles; ++i) {
     stroke(0,0,255);
     fill(0,0,255);
-    ellipse(cc[i].x, cc[i].y, 5,5);
+    ellipse(circumcenters[i].x, circumcenters[i].y, 5,5);
     stroke(255,0,0);
     noFill();  
-    ellipse(cc[i].x, cc[i].y, cr[i]*2, cr[i]*2);
+    ellipse(circumcenters[i].x, circumcenters[i].y, circumcircleRadius[i]*2, circumcircleRadius[i]*2);
   }
     
   stroke(0,0,0);
@@ -357,8 +365,8 @@ void draw() {
 
   pushMatrix();
     drawTriangles();
-    if (bRenderCC) {
-      drawCircumcenters();
+    if (shouldDrawCircumcircles) {
+      drawCircumcircles();
     }
   popMatrix();
 }
