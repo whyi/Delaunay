@@ -59,7 +59,7 @@ public class Mesh2D {
       if (t1.a == t2.a && t1.b == t2.b) {
         opposites.set(t1.c, t2.c);
         opposites.set(t2.c, t1.c);
-        i+=1;
+        ++i;
       }
     }
   }

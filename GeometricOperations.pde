@@ -26,11 +26,11 @@ public class GeometricOperations {
     float tangentDotNormal = tangent.dot(normal);
     float t = -QSDotNormal/tangentDotNormal;
     tangent.scaleBy(t);
-    return new PVector(S.x+tangent.v.x,S.y+tangent.v.y);
+    return new PVector(S.x+tangent.v.x,S.y+tangent.v.y,0);
   }
   
   private PVector midVector(PVector A, PVector B) {
-    return new PVector( (A.x + B.x)/2, (A.y + B.y)/2 );
+    return new PVector((A.x + B.x)/2, (A.y + B.y)/2, 0);
   }
 
   public PVector circumcenter(PVector A, PVector B, PVector C) {
@@ -44,14 +44,14 @@ public class GeometricOperations {
     Vector2D BC = new Vector2D(B,C);
     BC.left();
     BC.normalize();
-    BC.scaleBy(-1);  
+    BC.scaleBy(-1);
   
-    float fact = 100;
+    final float fact = 100;
   
-    PVector AA = new PVector(midAB.x+AB.v.x*fact, midAB.y+AB.v.y*fact);
-    PVector BB = new PVector(midAB.x-AB.v.x*fact, midAB.y-AB.v.y*fact);
-    PVector CC = new PVector(midBC.x+BC.v.x*fact, midBC.y+BC.v.y*fact);
-    PVector DD = new PVector(midBC.x-BC.v.x*fact, midBC.y-BC.v.y*fact);
+    PVector AA = new PVector(midAB.x+AB.v.x*fact, midAB.y+AB.v.y*fact, 0);
+    PVector BB = new PVector(midAB.x-AB.v.x*fact, midAB.y-AB.v.y*fact, 0);
+    PVector CC = new PVector(midBC.x+BC.v.x*fact, midBC.y+BC.v.y*fact, 0);
+    PVector DD = new PVector(midBC.x-BC.v.x*fact, midBC.y-BC.v.y*fact, 0);
     return intersection(AA, BB, CC, DD);  
   }  
 }
