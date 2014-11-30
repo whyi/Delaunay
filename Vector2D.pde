@@ -5,8 +5,8 @@ public class Vector2D {
     v = new PVector(B.x-A.x, B.y-A.y);
   }
   
-  public Vector2D(float x, float y, float z) {
-    v = new PVector(x,y,z);
+  public Vector2D(float x, float y) {
+    v = new PVector(x,y,0);
   }
   
   public float dot(Vector2D theOtherVector) {
@@ -25,6 +25,14 @@ public class Vector2D {
   
   public void scaleBy(float scalar) {
     v.mult(scalar);
+  }
+  
+  public float x() {
+    return v.x;
+  }
+  
+  public float y() {
+    return v.y;
   }
 }
 
