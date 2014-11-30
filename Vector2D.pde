@@ -2,13 +2,9 @@ public class Vector2D {
   private PVector v;
 
   public Vector2D(PVector A, PVector B) {
-    v = new PVector(B.x-A.x, B.y-A.y);
+    v = new PVector(B.x-A.x, B.y-A.y, 0);
   }
-  
-  public Vector2D(float x, float y) {
-    v = new PVector(x,y,0);
-  }
-  
+
   public float dot(Vector2D theOtherVector) {
     return v.dot(theOtherVector.v);
   }
