@@ -12,8 +12,8 @@ This is an implementation of Incremental Delaunay Triangulation algorithm using 
 ## Unit testing
  * I have been using Jasmine and Coffeescript as the framework for unittest.
  * Have the app running via Processing, as described in the previous section.
- * Open a shell, execute runTests.sh
- * Now, navigate to http://127.0.0.1:RUNNING_PROCESISNG_PORT/SpecRunner.html within the browser where the RUNNING_PROCESSING_PORT is the port number of a running Processing instance. This will be provided when you run the app as described in the previous section.
+ * Open a shell, cd to the directory containing ```runTests.sh```. Then execute the ```runTests.sh```
+ * Now, navigate to ```http://127.0.0.1:RUNNING_PROCESISNG_PORT/SpecRunner.html``` in the browser where the ```RUNNING_PROCESSING_PORT``` is the port number of a running Processing instance. This will be provided when you run the app as described in the previous section.
  * Unable to run the unittests? See https://coderwall.com/p/t7zm7q/unittesting-processing-js-project-with-jasmine for more information.
 
 ## See it in action
